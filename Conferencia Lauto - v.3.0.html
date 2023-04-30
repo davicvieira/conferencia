@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Conferencia L'auto Cargo</title>
+    <script>
+        let codigo = "";
+        let contador = 0;
+        let codigosAdicionados = [];
+
+        function adicionarLinha(codigo) {
+            let pedido = codigo.slice(0, 7);
+            let loja = codigo.slice(9, 13);
+            let volume = codigo.slice(15, 17);
+            let tabela = document.getElementById("tabela");
+            let novaLinha = tabela.insertRow();
+            let celulaPedido = novaLinha.insertCell(0);
+            let celulaLoja = novaLinha.insertCell(1);
+            let celulaVolume = novaLinha.insertCell(2);
+            celulaPedido.innerHTML = "Pedido: " + pedido;
+            celulaLoja.innerHTML = "Loja: " + loja;
+            celulaVolume.innerHTML = "Volume: " + volume;
+            celulaVolume.classList.add("volume");
+            contador++;
+            document.getElementById("contador").innerHTML = "Total de itens bipados: " + contador;
+            codigosAdicionados.push(codigo);
+            document.getElementById("codigo").value = "";
+            ordenarTabela();
+            // atualiza a nova tabela
+            let tabelaLojas = document.getElementById("tabelaLojas");
+            let linhaLoja = tabelaLojas.querySelector("tr[data-loja='" + loja + "']");
+            if (!linhaLoja) {
+                linhaLoja = tabelaLojas.insertRow();
+                linhaLoja.setAttribute("data-loja", loja);
+                let celulaNomeLoja = linhaLoja.insertCell(0);
+                let celulaQtdVolumes = linhaLoja.insertCell(1);
+                celulaNomeLoja.innerHTML = "Loja: " + loja;
+                celulaQtdVolumes.innerHTML = "Quantidade de Volumes: 1";
+            } else {
+                let celulaQtdVolumes = linhaLoja.cells[1];
+                let qtdVolumes = parseInt(celulaQtdVolumes.innerHTML.slice(23));
+                celulaQtdVolumes.innerHTML = "Quantidade de Volumes: " + (qtdVolumes + 1);
+            }
+            atualizarTabelaLojas();
+
+            // adiciona botão para remover linha
+            let celulaRemover = novaLinha.insertCell(3);
+            let botaoRemover = document.createElement("button");
+            botaoRemover.innerHTML = "Remover";
+            botaoRemover.onclick = function () { removerLinha(this); }
+            celulaRemover.appendChild(botaoRemover);
+
+
+            codigosAdicionados.push(codigo);
+            document.getElementById("codigo").value = "";
+            ordenarTabela();
+            atualizarTabelaLojas();
+
+        }
+
+        function validarCodigoEntrada() {
+            let codigo = document.getElementById("codigo").value;
+            if (codigo.length === 18 && codigo.startsWith("2023")) {
+                if (codigosAdicionados.includes(codigo)) {
+                    alert("Código de barras já adicionado!");
+                } else {
+                    adicionarLinha(codigo);
+                }
+            } else if (codigo.length === 18) {
+                alert("Código de barras inválido!");
+                document.getElementById("codigo").value = "";
+            }
+        }
+
+        function ordenarTabela() {
+            let tabela = document.getElementById("tabela");
+            let linhas = tabela.rows;
+            let arr = Array.from(linhas);
+            let classeVolume = document.getElementsByClassName("volume")[0].cellIndex;
+            arr.sort(function (a, b) {
+                let valorA = a.cells[classeVolume].innerHTML.slice(8);
+                let valorB = b.cells[classeVolume].innerHTML.slice(8);
+                return valorA - valorB;
+            });
+            for (let i = 0; i < arr.length; i++) {
+                tabela.appendChild(arr[i]);
+            }
+        }
+
+        function removerLinha(botao) {
+            let linha = botao.parentNode.parentNode;
+            let codigo = linha.cells[0].innerHTML.slice(8) + "-" + linha.cells[1].innerHTML.slice(6) + "-" + linha.cells[2].innerHTML.slice(8);
+            let index = codigosAdicionados.indexOf(codigo);
+            if (index > -1) {
+                codigosAdicionados.splice(index, 1);
+            }
+            linha.remove();
+            atualizarContador();
+            atualizarTabelaLojas();
+        }
+
+        function atualizarContador() {
+            contador--;
+            document.getElementById("contador").innerHTML = "Total de itens bipados: " + contador;
+        }
+
+        function atualizarTabelaLojas() {
+            let tabelaLojas = document.getElementById("tabelaLojas");
+            let linhasTabela = tabelaLojas.querySelectorAll("tr[data-loja]");
+            linhasTabela.forEach(linha => {
+                let qtdVolumes = 0;
+                for (let i = 1; i < tabela.rows.length; i++) {
+                    let linhaTabela = tabela.rows[i];
+                    if (linhaTabela.cells[1].innerHTML.slice(6) === linha.getAttribute("data-loja")) {
+                        qtdVolumes++;
+                    }
+                }
+                linha.cells[1].innerHTML = "Quantidade de Volumes: " + qtdVolumes;
+                if (qtdVolumes === 0) {
+                    linha.remove();
+                }
+            });
+
+            for (let i = 1; i < tabela.rows.length; i++) {
+                let linhaTabela = tabela.rows[i];
+                let loja = linhaTabela.cells[1].innerHTML.slice(6);
+                let linhaLoja = tabelaLojas.querySelector("tr[data-loja='" + loja + "']");
+                if (!linhaLoja) {
+                    linhaLoja = tabelaLojas.insertRow();
+                    linhaLoja.setAttribute("data-loja", loja);
+                    let celulaNomeLoja = linhaLoja.insertCell(0);
+                    let celulaQtdVolumes = linhaLoja.insertCell(1);
+                    celulaNomeLoja.innerHTML = "Loja: " + loja;
+                    celulaQtdVolumes.innerHTML = "Quantidade de Volumes: 1";
+                }
+            }
+        }
+
+
+    </script>
+</head>
+
+<body>
+    <header id="header">Conferencia L'auto Cargo - Pague Menos</header>
+
+    <div class="input">
+        <label for="codigo">:</label>
+        <input type="text" id="codigo" oninput="validarCodigoEntrada()"><br><br>
+
+
+
+
+    </div>
+
+    <div class="container">
+        <table id="tabela">
+            <tr>
+                <th>Pedido</th>
+                <th>Loja</th>
+                <th>Volume</th>
+                <th><button id="remover" onclick="removerLinha(this)">Remover</button></th>
+            </tr>
+        </table>
+
+        <table id="tabelaLojas">
+            <tr>
+                <th>Loja</th>
+                <th>Quantidade de Volumes</th>
+            </tr>
+        </table>
+    </div>
+
+    <p id="contador">Total de itens bipados: 0</p>
+    <footer style="font-size: xx-small">
+        <p>Developed by Davi Costa</p>
+    </footer>
+</body>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;400&display=swap');
+
+    #remover {
+        display: none;
+    }
+
+    * {
+        font-family: "Poppins";
+    }
+
+    body {
+        background-color: #1B2029;
+        color: white;
+    }
+
+    #codigo {
+        background-color: #161923;
+        width: 20%;
+        outline: none;
+        color: bisque;
+
+    }
+
+    #header {
+        font-size: 25px;
+        display: flex;
+        color: rgb(247, 247, 247);
+
+
+    }
+
+    #tabelaLojas,
+    #table {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+
+    }
+
+    th,
+    tr,
+    td {
+        border-bottom: 1, 5px solid #373b49;
+        padding: 6px 12px;
+        border-left: 1px solid #373b49;
+        border-right: 1px solid #373b49;
+        border-style: groove;
+
+    }
+
+    .container {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    @media print {
+
+        label,
+        input {
+            display: none;
+
+        }
+
+        #tabelaLojas,
+        #tabela {
+            padding: 10px;
+
+        }
+    }
+</style>
+
+
+</html>
