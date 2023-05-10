@@ -2,7 +2,12 @@
 <html>
 
 <head>
+
+    <header>
+        <h5>L'auto Cargo - Conferencia Pague Menos</h5>
+    </header>
     <title>Conferencia L'auto Cargo</title>
+
     <script>
         let codigo = "";
         let contador = 0;
@@ -41,6 +46,7 @@
                 let qtdVolumes = parseInt(celulaQtdVolumes.innerHTML.slice(23));
                 celulaQtdVolumes.innerHTML = "Quantidade de Volumes: " + (qtdVolumes + 1);
             }
+
             atualizarTabelaLojas();
 
             // adiciona botão para remover linha
@@ -55,6 +61,9 @@
             document.getElementById("codigo").value = "";
             ordenarTabela();
             atualizarTabelaLojas();
+
+            celulaRemover.classList.add("colunaBotao");
+
 
         }
 
@@ -76,27 +85,63 @@
             let tabela = document.getElementById("tabela");
             let linhas = tabela.rows;
             let arr = Array.from(linhas);
-            let classeVolume = document.getElementsByClassName("volume")[0].cellIndex;
+
+            // ordenar por loja
             arr.sort(function (a, b) {
-                let valorA = a.cells[classeVolume].innerHTML.slice(8);
-                let valorB = b.cells[classeVolume].innerHTML.slice(8);
-                return valorA - valorB;
+                let lojaA = a.cells[1].innerHTML.slice(6);
+                let lojaB = b.cells[1].innerHTML.slice(6);
+                if (lojaA < lojaB) return -1;
+                if (lojaA > lojaB) return 1;
+                return 0;
             });
+
+            // ordenar por volume dentro de cada loja
+            let lojaAtual = "";
+            let linhasDaLoja = [];
             for (let i = 0; i < arr.length; i++) {
-                tabela.appendChild(arr[i]);
+                let loja = arr[i].cells[1].innerHTML.slice(6);
+                if (loja !== lojaAtual) {
+                    if (linhasDaLoja.length > 1) {
+                        linhasDaLoja.sort(function (a, b) {
+                            let volumeA = a.cells[2].innerHTML.slice(8);
+                            let volumeB = b.cells[2].innerHTML.slice(8);
+                            return volumeA - volumeB;
+                        });
+                    }
+                    linhasDaLoja.forEach(function (linha) {
+                        tabela.appendChild(linha);
+                    });
+                    lojaAtual = loja;
+                    linhasDaLoja = [];
+                }
+                linhasDaLoja.push(arr[i]);
             }
+            if (linhasDaLoja.length > 1) {
+                linhasDaLoja.sort(function (a, b) {
+                    let volumeA = a.cells[2].innerHTML.slice(8);
+                    let volumeB = b.cells[2].innerHTML.slice(8);
+                    return volumeA - volumeB;
+                });
+            }
+            linhasDaLoja.forEach(function (linha) {
+                tabela.appendChild(linha);
+            });
         }
 
         function removerLinha(botao) {
+
             let linha = botao.parentNode.parentNode;
             let codigo = linha.cells[0].innerHTML.slice(8) + "-" + linha.cells[1].innerHTML.slice(6) + "-" + linha.cells[2].innerHTML.slice(8);
             let index = codigosAdicionados.indexOf(codigo);
-            if (index > -1) {
-                codigosAdicionados.splice(index, 1);
+
+            if (confirm("Tem realmente certeza que deseja remover esse volume dessa loja??")) {
+                if (index > -1) {
+                    codigosAdicionados.splice(index, 1);
+                }
+                linha.remove();
+                atualizarContador();
+                atualizarTabelaLojas();
             }
-            linha.remove();
-            atualizarContador();
-            atualizarTabelaLojas();
         }
 
         function atualizarContador() {
@@ -141,8 +186,8 @@
 </head>
 
 <body>
-    <header id="header">Conferencia L'auto Cargo - Pague Menos</header>
 
+<div class="underline">
     <div class="input">
         <label for="codigo">:</label>
         <input type="text" id="codigo" oninput="validarCodigoEntrada()"><br><br>
@@ -152,13 +197,15 @@
 
     </div>
 
+</div>
+
     <div class="container">
-        <table id="tabela">
+        <table id="tabela" class="table">
             <tr>
                 <th>Pedido</th>
                 <th>Loja</th>
                 <th>Volume</th>
-                <th><button id="remover" onclick="removerLinha(this)">Remover</button></th>
+                <th class="colunaBotao"><button id="remover" onclick="removerLinha(this)">Remover</button></th>
             </tr>
         </table>
 
@@ -179,8 +226,23 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;400&display=swap');
 
+    button:hover {
+        background-color: brown;
+    }
+
+    button {
+        border: none;
+        cursor: pointer;
+        font-family: Poppins;
+        background-color: #8c909b38;
+        color: rgba(250, 5, 5, 0.61);
+        border-radius: 7px;
+        transition: all .3s ease-in-out;
+    }
+
     #remover {
         display: none;
+
     }
 
     * {
@@ -188,22 +250,45 @@
     }
 
     body {
-        background-color: #1B2029;
+        background: #1B2029;
         color: white;
+        width: 100%;
+        height: 100%;
+        
     }
 
     #codigo {
-        background-color: #161923;
-        width: 20%;
+        background-color: #1B2029;
+        width: 30%;
         outline: none;
         color: bisque;
+        
 
     }
 
-    #header {
-        font-size: 25px;
-        display: flex;
-        color: rgb(247, 247, 247);
+    
+
+    header {
+
+
+        font-size: 42px;
+        color:white;
+        position: relative;
+
+
+
+    }
+
+    header h5::before {
+        content: '';
+        position: absolute;
+        height: 6px;
+        width: 160px;
+        bottom: 1px;
+        left: 0;
+        border-radius: 8px;
+        background: linear-gradient(45deg, yellow, blue);
+
 
 
     }
@@ -234,6 +319,11 @@
     }
 
     @media print {
+
+        .colunaBotao {
+            display: none;
+
+        }
 
         label,
         input {
